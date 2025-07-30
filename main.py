@@ -187,11 +187,11 @@ class ClientDialog:
             return
             
         self.result_data = (
-            self.nom_input.get(),
-            self.prenom_input.get(),
-            self.email_input.get(),
-            self.telephone_input.get(),
-            self.adresse_input.get(),
+            self.nom_input.get() or "",  # Allow empty strings
+            self.prenom_input.get() or "",
+            self.email_input.get() or "",
+            self.telephone_input.get() or "",
+            self.adresse_input.get() or "",
             devis,
             dinar,
             dette
@@ -436,10 +436,7 @@ class BankingApp:
         if dialog.result:
             nom, prenom, email, telephone, adresse, devis, dinar, dette = dialog.get_data()
             
-            if not nom or not prenom:
-                messagebox.showerror(i18n.get_text("error"), i18n.get_text("last_name_required"))
-                return
-                
+            # All fields are now optional - no validation required
             def add_async():
                 try:
                     loop = asyncio.new_event_loop()
@@ -477,10 +474,7 @@ class BankingApp:
         if dialog.result:
             nom, prenom, email, telephone, adresse, devis, dinar, dette = dialog.get_data()
             
-            if not nom or not prenom:
-                messagebox.showerror(i18n.get_text("error"), i18n.get_text("last_name_required"))
-                return
-                
+            # All fields are now optional - no validation required
             def edit_async():
                 try:
                     loop = asyncio.new_event_loop()

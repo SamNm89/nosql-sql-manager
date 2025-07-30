@@ -75,9 +75,9 @@ class AsyncDatabaseManager:
             await conn.execute('''
                 CREATE TABLE IF NOT EXISTS clients (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    nom TEXT NOT NULL,
-                    prenom TEXT NOT NULL,
-                    email TEXT UNIQUE,
+                    nom TEXT,
+                    prenom TEXT,
+                    email TEXT,
                     telephone TEXT,
                     adresse TEXT,
                     devis REAL DEFAULT 0.0,
@@ -146,7 +146,10 @@ class AsyncDatabaseManager:
             clients = [
                 ("Dupont", "Jean", "jean.dupont@email.com", "0123456789", "123 Rue de la Paix, Paris", 5000.0, 750000.0, 0.0),
                 ("Martin", "Marie", "marie.martin@email.com", "0987654321", "456 Avenue des Champs, Lyon", 12000.0, 1800000.0, 1500.0),
-                ("Bernard", "Pierre", "pierre.bernard@email.com", "0555666777", "789 Boulevard Central, Marseille", 2500.0, 375000.0, 3000.0)
+                ("Bernard", "Pierre", "pierre.bernard@email.com", "0555666777", "789 Boulevard Central, Marseille", 2500.0, 375000.0, 3000.0),
+                ("", "", "", "", "", 0.0, 0.0, 0.0),  # Example of empty client
+                ("Smith", "", "john.smith@email.com", "", "London, UK", 8000.0, 1200000.0, 0.0),  # Missing first name
+                ("", "Alice", "", "1234567890", "", 3000.0, 450000.0, 500.0)  # Missing last name
             ]
             
             await conn.executemany('''
