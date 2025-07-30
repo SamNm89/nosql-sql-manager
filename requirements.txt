@@ -1,0 +1,10 @@
+# Core dependencies
+asyncio-mqtt==0.16.1
+aiofiles==23.2.1
+
+# Development dependencies (optional)
+# black==23.12.1
+# flake8==7.0.0
+# mypy==1.8.0
+
+# Python 3.8+ is required 
