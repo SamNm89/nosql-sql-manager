@@ -34,6 +34,13 @@ wheels/
 # PyInstaller
 *.manifest
 *.spec
+banking_app.spec
+
+# Distribution files
+DISTRIBUTION_README.md
+run_banking_app.bat
+INSTALL.txt
+run_app.bat
 
 # Installer logs
 pip-log.txt
