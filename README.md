@@ -7,6 +7,9 @@ A modern desktop banking management system with advanced features including asyn
 - **🌍 Internationalization**: Support for English and French languages with dynamic switching
 - **💾 Client Management**: Add, edit, delete, and search clients with validation
 - **🔍 Real-Time SQL Preview**: Live SQL command preview with syntax highlighting
+- **🔄 Manual Control**: No automatic refreshes - you control when to update
+- **🗑️ Account Management**: Safe delete with account protection
+- **🔍 Smart Operations**: Comprehensive SQL preview for all operations
 
 ## 🚀 Quick Start
 
@@ -33,7 +36,7 @@ python main.py
   - `asyncio-mqtt==0.16.1` - Async messaging
   - `aiofiles==23.2.1` - Async file operations
 - **OS**: Windows, macOS, Linux
-- 
+
 ## 🎯 User Guide
 
 ### Getting Started
@@ -41,7 +44,6 @@ python main.py
 2. **Connect Database**: Click "Connect Database" button
 3. **Language Selection**: Choose your preferred language from the dropdown
 4. **SQL Preview**: Toggle "Show SQL Preview" to see database operations
-
 
 ## 🏗️ Project Structure
 
@@ -165,6 +167,84 @@ Language can be changed through the UI dropdown without restarting the applicati
 INSERT INTO clients (nom, prenom, email, telephone, adresse, devis, dinar, dette) 
 VALUES ('Smith', 'John', 'john@email.com', '1234567890', '123 Main St', 5000.0, 750000.0, 0.0);
 ```
+
+### Edit Client
+```sql
+UPDATE clients SET nom='Smith', prenom='John', email='john@email.com', telephone='1234567890', adresse='123 Main St', devis=5000.0, dinar=750000.0, dette=0.0 WHERE id=1;
+```
+
+### Delete Client (Safe)
+```sql
+DELETE FROM clients WHERE id=1;
+```
+
+### Delete Account (Destructive)
+```sql
+DELETE FROM comptes WHERE client_id=1;
+DELETE FROM clients WHERE id=1;
+```
+
+## 🛠️ Error Handling
+
+- **Database Connection**: Automatic retry with user feedback
+- **SQL Injection Protection**: Parameterized queries for all operations
+- **Validation Errors**: Clear error messages for invalid input
+- **SQL Preview Errors**: Auto-recovery for preview window issues
+- **Async Operations**: Thread-safe database operations
+
+## ⚡ Performance Features
+
+- **Async Database**: Non-blocking database operations
+- **Threading**: Background operations for responsive UI
+- **No Auto-Refresh**: Manual control prevents unnecessary updates
+- **Efficient Queries**: Optimized SQL for better performance
+
+## 🚀 Running the Application
+
+### Development
+1. **Clone Repository**: `git clone <repository-url>`
+2. **Navigate**: `cd bank-app`
+3. **Activate Environment**: `banking_env\Scripts\activate`
+4. **Install Dependencies**: `pip install -r requirements.txt`
+5. **Run Application**: `python main.py`
+
+### Production
+- Use `run_app.bat` for easy launching
+- Virtual environment is pre-configured
+- All dependencies are included
+
+## 🔧 Development
+
+### Adding New Features
+1. **Create Feature**: Add new functionality to `main.py`
+2. **Update SQL Preview**: Include SQL preview for new operations
+3. **Add Translations**: Update `locales/en.json` and `locales/fr.json`
+4. **Test Functionality**: Verify SQL preview works correctly
+5. **Update Documentation**: Modify this README if needed
+6. **Test with Batch File**: Ensure `run_app.bat` works
+7. **Test with `run_app.bat`**: Verify the batch file launches correctly
+
+### Testing
+- **Import Test**: `python -c "import main"`
+- **Run Test**: Use `run_app.bat` for testing
+- **SQL Preview Test**: Verify all operations show correct SQL
+- **Language Test**: Switch between English and French
+
+## 📝 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📞 Support
+
+For support and questions, please open an issue on GitHub.
 
 
 
