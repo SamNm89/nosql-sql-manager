@@ -2,6 +2,7 @@
 
 A modern desktop banking management system with advanced features including async operations, internationalization, comprehensive logging, robust error handling, and real-time SQL preview for learning and debugging.
 
+I built this project as a way to teach myself SQL more effectively. Instead of memorizing commands, I created a system that visually shows what SQL is executed when performing client/account actions—making learning active and practical.
 ## ✨ Features
 
 - **🌍 Internationalization**: Support for English and French languages with dynamic switching
