@@ -76,10 +76,6 @@ venv.bak/
 .DS_Store
 Thumbs.db
 
-# Configuration files (optional - you might want to keep these)
-# config.json
-# locales/
-
 # Backup files
 backups/
 *.bak 

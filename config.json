@@ -1,0 +1,32 @@
+{
+  "database": {
+    "path": "banque.db",
+    "backup_enabled": true,
+    "backup_interval": 24,
+    "max_backups": 7
+  },
+  "ui": {
+    "language": "en",
+    "theme": "default",
+    "window_size": "1600x800",
+    "auto_save": true
+  },
+  "logging": {
+    "level": "INFO",
+    "file_enabled": true,
+    "console_enabled": true,
+    "max_file_size": 10,
+    "backup_count": 5
+  },
+  "security": {
+    "encrypt_sensitive_data": false,
+    "session_timeout": 30,
+    "max_login_attempts": 3
+  },
+  "performance": {
+    "cache_enabled": true,
+    "cache_size": 100,
+    "async_operations": true,
+    "batch_size": 50
+  }
+}

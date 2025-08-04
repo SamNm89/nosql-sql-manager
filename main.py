@@ -18,35 +18,62 @@ class SQLPreviewWindow:
     def __init__(self, parent):
         self.window = tk.Toplevel(parent)
         self.window.title(i18n.get_text("sql_preview"))
-        self.window.geometry("500x300")
+        self.window.geometry("600x400")
         self.window.resizable(True, True)
         
+        # Make window stay on top
+        self.window.attributes('-topmost', True)
+        
+        # Prevent window from being destroyed when parent is closed
+        self.window.protocol("WM_DELETE_WINDOW", self.hide)
+        
         # SQL Text Area
-        self.sql_text = tk.Text(self.window, font=("Courier", 10), wrap=tk.WORD)
+        self.sql_text = tk.Text(self.window, font=("Courier", 10), wrap=tk.WORD, bg="black", fg="white")
         scrollbar = ttk.Scrollbar(self.window, orient="vertical", command=self.sql_text.yview)
         self.sql_text.configure(yscrollcommand=scrollbar.set)
         
         # Layout
-        ttk.Label(self.window, text=i18n.get_text("generated_sql")).pack(anchor="w", padx=5, pady=5)
+        ttk.Label(self.window, text=i18n.get_text("generated_sql"), font=("Arial", 12, "bold")).pack(anchor="w", padx=5, pady=5)
         self.sql_text.pack(side="left", fill="both", expand=True, padx=5, pady=5)
         scrollbar.pack(side="right", fill="y")
+        
+        # Add a close button
+        close_button = ttk.Button(self.window, text="Close", command=self.hide)
+        close_button.pack(pady=5)
         
         self.window.withdraw()  # Hide initially
         
     def update_sql(self, sql_command):
         try:
-            self.sql_text.delete(1.0, tk.END)
-            self.sql_text.insert(1.0, sql_command)
-            self.window.deiconify()  # Show window
-            logger.debug(f"SQL preview updated: {sql_command[:100]}...")
+            # Check if window and text widget still exist
+            if hasattr(self, 'window') and self.window.winfo_exists():
+                self.sql_text.delete(1.0, tk.END)
+                self.sql_text.insert(1.0, sql_command)
+                self.window.deiconify()  # Show window
+                self.window.lift()  # Bring to front
+                self.window.focus_force()  # Give focus
+                logger.debug(f"SQL preview updated: {sql_command[:100]}...")
+        except tk.TclError as e:
+            # Window might be destroyed, recreate it
+            logger.warning(f"SQL preview window error, recreating: {e}")
+            try:
+                self.__init__(self.window.master)
+                self.update_sql(sql_command)
+            except:
+                pass
+        
+    def hide(self):
+        """Hide the SQL preview window."""
+        try:
+            self.window.withdraw()
         except tk.TclError:
-            # Window might be destroyed, ignore the error
             pass
         
     def toggle(self):
         try:
             if self.window.state() == 'withdrawn':
                 self.window.deiconify()
+                self.window.lift()
             else:
                 self.window.withdraw()
         except tk.TclError:
@@ -272,7 +299,7 @@ class BankingApp:
         ttk.Button(button_frame, text=i18n.get_text("add_client"), command=self.add_client).pack(side="left", padx=5)
         ttk.Button(button_frame, text=i18n.get_text("edit_client"), command=self.edit_client).pack(side="left", padx=5)
         ttk.Button(button_frame, text=i18n.get_text("delete_client"), command=self.delete_client).pack(side="left", padx=5)
-        ttk.Button(button_frame, text="Delete Client & Accounts", command=self.delete_client_with_accounts).pack(side="left", padx=5)
+        ttk.Button(button_frame, text="Delete Account", command=self.delete_client_with_accounts).pack(side="left", padx=5)
         ttk.Button(button_frame, text=i18n.get_text("refresh"), command=self.load_clients).pack(side="left", padx=5)
         
         # Treeview for clients
@@ -371,9 +398,9 @@ class BankingApp:
                 # Update UI in main thread
                 self.root.after(0, self.update_client_tree, clients)
                 
-                # Show SQL command
+                # Show SQL preview for manual refresh
                 sql_command = "SELECT * FROM clients ORDER BY nom, prenom;"
-                self.root.after(0, lambda: self.sql_preview.update_sql(sql_command))
+                self.root.after(0, lambda: self.show_sql_preview(sql_command))
                 
             except Exception as e:
                 logger.error(f"Error loading clients: {e}")
@@ -409,13 +436,10 @@ class BankingApp:
                 # Update UI in main thread
                 self.root.after(0, self.update_client_tree, clients)
                 
-                # Show SQL command
+                # Show SQL command only for search operations (not for automatic refreshes)
                 if search_term:
                     sql_command = f"SELECT * FROM clients WHERE nom LIKE '%{search_term}%' OR prenom LIKE '%{search_term}%' OR email LIKE '%{search_term}%' ORDER BY nom, prenom;"
-                else:
-                    sql_command = "SELECT * FROM clients ORDER BY nom, prenom;"
-                    
-                self.root.after(0, lambda: self.sql_preview.update_sql(sql_command))
+                    self.root.after(0, lambda: self.show_sql_preview(sql_command))
                 
             except Exception as e:
                 logger.error(f"Error searching clients: {e}")
@@ -443,11 +467,10 @@ class BankingApp:
                     asyncio.set_event_loop(loop)
                     client_id = loop.run_until_complete(async_db.add_client((nom, prenom, email, telephone, adresse, devis, dinar, dette)))
                     
-                    self.root.after(0, lambda: messagebox.showinfo(i18n.get_text("success"), i18n.get_text("client_added")))
-                    self.root.after(0, self.load_clients)
-                    
                     sql_command = f"INSERT INTO clients (nom, prenom, email, telephone, adresse, devis, dinar, dette) VALUES ('{nom}', '{prenom}', '{email}', '{telephone}', '{adresse}', {devis}, {dinar}, {dette});"
-                    self.root.after(0, lambda: self.sql_preview.update_sql(sql_command))
+                    self.root.after(0, lambda: self.show_sql_preview(sql_command))
+                    self.root.after(0, lambda: messagebox.showinfo(i18n.get_text("success"), i18n.get_text("client_added")))
+                    # No automatic refresh - user can manually refresh if needed
                     
                 except Exception as e:
                     logger.error(f"Error adding client: {e}")
@@ -481,11 +504,10 @@ class BankingApp:
                     asyncio.set_event_loop(loop)
                     loop.run_until_complete(async_db.update_client(client_id, (nom, prenom, email, telephone, adresse, devis, dinar, dette)))
                     
-                    self.root.after(0, lambda: messagebox.showinfo(i18n.get_text("success"), i18n.get_text("client_updated")))
-                    self.root.after(0, self.load_clients)
-                    
                     sql_command = f"UPDATE clients SET nom='{nom}', prenom='{prenom}', email='{email}', telephone='{telephone}', adresse='{adresse}', devis={devis}, dinar={dinar}, dette={dette} WHERE id={client_id};"
-                    self.root.after(0, lambda: self.sql_preview.update_sql(sql_command))
+                    self.root.after(0, lambda: self.show_sql_preview(sql_command))
+                    self.root.after(0, lambda: messagebox.showinfo(i18n.get_text("success"), i18n.get_text("client_updated")))
+                    # No automatic refresh - user can manually refresh if needed
                     
                 except Exception as e:
                     logger.error(f"Error editing client: {e}")
@@ -519,16 +541,22 @@ class BankingApp:
                         accounts = loop.run_until_complete(async_db.get_client_accounts(client_id))
                         account_info = "\n".join([f"Account {acc[0]}: {acc[2]} (Balance: {acc[3]}€)" for acc in accounts])
                         error_msg = f"{i18n.get_text('cannot_delete_client_with_accounts')}\n\nClient has {len(accounts)} account(s):\n{account_info}"
+                        
+                        # Show SQL preview explaining why deletion failed
+                        sql_command = f"""-- Cannot delete client {client_id} because they have accounts
+-- Client has {len(accounts)} account(s):
+-- {account_info.replace(chr(10), '\\n')}
+-- Use 'Delete Account' button to delete client and all accounts"""
+                        self.root.after(0, lambda: self.show_sql_preview(sql_command))
                         self.root.after(0, lambda: messagebox.showerror(i18n.get_text("error"), error_msg))
                         return
                     
                     loop.run_until_complete(async_db.delete_client(client_id))
                     
-                    self.root.after(0, lambda: messagebox.showinfo(i18n.get_text("success"), i18n.get_text("client_deleted")))
-                    self.root.after(0, self.load_clients)
-                    
                     sql_command = f"DELETE FROM clients WHERE id={client_id};"
-                    self.root.after(0, lambda: self.sql_preview.update_sql(sql_command))
+                    self.root.after(0, lambda: self.show_sql_preview(sql_command))
+                    self.root.after(0, lambda: messagebox.showinfo(i18n.get_text("success"), i18n.get_text("client_deleted")))
+                    # No automatic refresh - user can manually refresh if needed
                     
                 except Exception as e:
                     logger.error(f"Error deleting client: {e}")
@@ -566,11 +594,15 @@ class BankingApp:
                     # Then delete client
                     loop.run_until_complete(async_db.delete_client(client_id))
                     
+                    # Show comprehensive SQL preview
+                    sql_command = f"""-- Delete client accounts first
+DELETE FROM comptes WHERE client_id={client_id};
+
+-- Then delete the client
+DELETE FROM clients WHERE id={client_id};"""
+                    self.root.after(0, lambda: self.show_sql_preview(sql_command))
                     self.root.after(0, lambda: messagebox.showinfo(i18n.get_text("success"), i18n.get_text("client_and_accounts_deleted")))
-                    self.root.after(0, self.load_clients)
-                    
-                    sql_command = f"DELETE FROM clients WHERE id={client_id};"
-                    self.root.after(0, lambda: self.sql_preview.update_sql(sql_command))
+                    # No automatic refresh - user can manually refresh if needed
                     
                 except Exception as e:
                     logger.error(f"Error deleting client with accounts: {e}")
@@ -582,6 +614,10 @@ class BankingApp:
             
     def toggle_sql_preview(self):
         self.sql_preview.toggle()
+        
+    def show_sql_preview(self, sql_command):
+        """Show SQL preview with the given command."""
+        self.sql_preview.update_sql(sql_command)
         
     def run(self):
         try:
